@@ -20,6 +20,19 @@ def loading(duration: float = 2, message: str = "Processing") -> None:
 
 def print2(t, d, c):
     Console().print(Panel(d, title=t, width=None, padding=(1, 3), style=c))
+    
+def print3(title, content, color):
+    """Print tokens in a clean, copy-friendly format"""
+    console = Console()
+    
+    # Title with color
+    console.print(f"[{color}]{title}[/{color}]")
+    
+    # Content without box (plain text)
+    console.print(content, markup=False, highlight=False)
+    
+    # Separator line for visual clarity
+    console.print(f"[{color}]{'─' * 59}[/{color}]\n")
 
 def clear():
     platform = sys.platform.lower()
@@ -46,7 +59,7 @@ class FacebookTokenGetter:
 
     def get_eaaau_token(self, email, password):
         try:
-            loading(1, "Authenticating")
+            loading(3, "Authenticating")
             headers = {
                 'authorization': 'OAuth 350685531728|62f8ce9f74b12f84c123cc23437a4a32',
                 'x-fb-friendly-name': 'Authenticate',
@@ -91,7 +104,7 @@ class FacebookTokenGetter:
 
     def get_eaad6v7_token(self, eaaau_token):
         try:
-            loading(1, "Generating EAAD6V7 Token")
+            loading(3, "Generating EAAD6V7 Token")
             url = f"{self.endpoints['key']}/method/auth.getSessionforApp?format=json&access_token={eaaau_token}&new_app_id=275254692598279"
             response = self.session.get(url).json()
             
@@ -105,7 +118,7 @@ class FacebookTokenGetter:
 
     def get_eaag_token(self, cookies):
         try:
-            loading(1, "Extracting EAAG Token")
+            loading(3, "Extracting EAAG Token")
             headers = {
                 'authority': 'business.facebook.com',
                 'cookie': cookies,
@@ -129,13 +142,13 @@ class FacebookTokenGetter:
     def get_both_tokens(self, email, password):
         try:
             # Get EAAAAU token
-            loading(1, "Getting EAAAAU Token")
+            loading(3, "Getting EAAAAU Token")
             eaaau_result = self.get_eaaau_token(email, password)
             if "error" in eaaau_result:
                 return {"error": f"EAAAAU: {eaaau_result['error']}"}
             
             # Get EAAD6V7 token
-            loading(1, "Getting EAAD6V7 Token")
+            loading(3, "Getting EAAD6V7 Token")
             eaad6v7_result = self.get_eaad6v7_token(eaaau_result["token"])
             if "error" in eaad6v7_result:
                 return {
@@ -180,19 +193,19 @@ def show_menu():
     print2('', logo, 'violet')
     print2('', 'Facebook Token Getter by Cyzsh\n ~ github.com/cyzsh0x', 'violet')
     
-    print("\n\033[95m[ OPTIONS ]\033[0m")
-    print("\033[96m[1] Get EAAAAU & EAAD6V7 Tokens")
-    print("[2] Get EAAAAU Token")
-    print("[3] Get EAAD6V7 Token")
-    print("[4] Get EAAG Token")
-    print("[0] Exit\033[0m")
+    print("\n\033[95m [ OPTIONS ]\033[0m")
+    print("\033[96m [1] Get EAAAAU & EAAD6V7 Tokens")
+    print(" [2] Get EAAAAU Token")
+    print(" [3] Get EAAD6V7 Token")
+    print(" [4] Get EAAG Token")
+    print(" [0] Exit\033[0m")
 
 def main():
     fb = FacebookTokenGetter()
     
     while True:
         show_menu()
-        choice = input('\n\033[0m [›] Select option (0-4):\033[90m ')
+        choice = input('\n\033[0m [›] Select option :\033[90m ')
         
         if choice == '1':
             email = input('\033[0m [›] Email/Username :\033[90m ')
@@ -203,13 +216,13 @@ def main():
                 display_error(result["error"])
                 if "eaaau" in result:
                     print("\n\033[92m[✓] EAAAAU Token\033[0m")
-                    print2('', result['eaaau'], 'green')
+                    print3('', result['eaaau'], 'green')
             else:
-                print("\n\033[92m[✓] Tokens retrieved successfully!\033[0m")
+                print("\n\033[92m [✓] Tokens retrieved successfully!\033[0m")
                 print("\n\033[96mEAAAAU Token\033[0m")
-                print2('', result['eaaau'], 'green')
+                print3('', result['eaaau'], 'green')
                 print("\n\033[96mEAAD6V7 Token\033[0m")
-                print2('', result['eaad6v7'], 'green')
+                print3('', result['eaad6v7'], 'green')
             
             input("\n\033[90m Press Enter to continue...\033[0m")
         
@@ -220,7 +233,7 @@ def main():
             
             if "token" in result:
                 print("\n\033[92m[✓] EAAAAU Token\033[0m")
-                print2('', result['token'], 'green')
+                print3('', result['token'], 'green')
             else:
                 display_error(result.get("error", "Unknown error"))
             
@@ -231,7 +244,7 @@ def main():
             password = input('\033[0m [›] Password       :\033[90m ')
             
             # First get EAAAAU token silently
-            loading(1, "Getting EAAAAU Token")
+            loading(3, "Getting EAAAAU Token")
             eaaau_result = fb.get_eaaau_token(email, password)
             if "error" in eaaau_result:
                 display_error(eaaau_result["error"])
@@ -242,31 +255,30 @@ def main():
             result = fb.get_eaad6v7_token(eaaau_result["token"])
             if "token" in result:
                 print("\n\033[92m[✓] EAAD6V7 Token\033[0m")
-                print2('', result['token'], 'green')
+                print3('', result['token'], 'green')
             else:
                 display_error(result.get("error", "Unknown error"))
             
             input("\n\033[90m Press Enter to continue...\033[0m")
         
         elif choice == '4':
-            print("\033[0m [›] Enter cookies:\033[90m ")
-            cookies = input()
+            cookies = input("\033[0m [›] Enter cookies :\033[90m ")
             result = fb.get_eaag_token(cookies)
             
             if "token" in result:
                 print("\n\033[92m[✓] EAAG Token\033[0m")
-                print2('', result['token'], 'green')
+                print3('', result['token'], 'green')
             else:
                 display_error(result.get("error", "Unknown error"))
             
             input("\n\033[90m Press Enter to continue...\033[0m")
         
         elif choice == '0':
-            print("\n\033[94m[+] Exiting...\033[0m")
+            print("\n\033[94m [+] Exiting...\033[0m")
             break
         
         else:
-            print("\033[91m[!] Invalid option selected\033[0m")
+            print("\033[91m [!] Invalid option selected\033[0m")
             input("\n\033[90m Press Enter to continue...\033[0m")
 
 if __name__ == "__main__":
